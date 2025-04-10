@@ -11,7 +11,31 @@ public class Plane_Control_Sys : MonoBehaviour
     public float Throttle = 10.0f;
     public float maxThrust = 50.0f;
 
+    //Drag Properties:
+    public AnimationCurve dragRight, dragLeft,
+            dragTop, dragBottom,
+            dragForward, dragBack;
 
+    public static Scale_Custom sc;
+
+
+    /* update loop. 
+    * first step, measure the planes current state "CalculateState(dt)"*/
+    void FixedUpdate()
+    {
+        float dt = Time.fixedDeltaTime;
+
+        CalculateState(dt);
+        CalculateAngleOfAttack();
+        CalculateGForce(dt);
+
+        if (Input.GetKey(KeyCode.Space))
+        {
+            Debug.Log("Space key was pressed.");
+            UpdateThrust();
+
+        }
+    }
 
     /* Take measurements of planes local frame of reference */
     void CalculateState(float dt)   {
@@ -58,21 +82,32 @@ public class Plane_Control_Sys : MonoBehaviour
         GetComponent<Rigidbody>().AddRelativeForce(Throttle * maxThrust * Vector3.right /*Vector3.forward*/);
     }
 
+    /* refereces:
+     * 
+     * drag equation:
+     * https://en.wikipedia.org/wiki/Drag_equation
+     * 
+     * drag from real physics to unity linear game physics:
+     * https://discussions.unity.com/t/how-drag-is-calculated-by-unity-engine/97622/3 
+     * 
+     * faking it in unity the mass density aka Air density (rho) and the reference area (A)
+     * will be ignored and we just control the planes drag by the coefficient of drag (Cd)
+     * 
+     * The coefficient of drag depends on which way the plane is facing relative to the air 
+     * flow */
+    void UdateDrag() {
+        var lv = LocalVelocity;
+        var lv2 = lv.sqrMagnitude; //velocity squared
 
-    /* update loop. 
-     * first step, measure the planes current state "CalculateState(dt)"*/
-    void FixedUpdate() {
-        float dt = Time.fixedDeltaTime;
+        //calculate coefficient of drag depending on direction on velocity
+        var coefficient = sc.ScaleCustom(
+            lv.normalized,
+            dragRight.Evaluate(Mathf.Abs(lv.x)),    dragLeft.Evaluate(Mathf.Abs(lv.x)),
+            dragTop.Evaluate(Mathf.Abs(lv.y)),      dragBottom.Evaluate(Mathf.Abs(lv.y)),
+            dragForward.Evaluate(Mathf.Abs(lv.z)),  dragBack.Evaluate(Mathf.Abs(lv.z))
+         );
 
-        CalculateState(dt);
-        CalculateAngleOfAttack();
-        CalculateGForce(dt);
-
-        if (Input.GetKey(KeyCode.Space))
-        {
-            Debug.Log("Space key was pressed.");
-            UpdateThrust();
-
-        }
+        var drag = coefficient.magnitude * lv2 * -lv.normalized; //drag is oppsite direction of velocity
+        GetComponent<Rigidbody>().AddRelativeForce(drag);
     }
 }
