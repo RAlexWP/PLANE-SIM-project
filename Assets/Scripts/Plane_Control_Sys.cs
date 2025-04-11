@@ -16,7 +16,11 @@ public class Plane_Control_Sys : MonoBehaviour
             dragTop, dragBottom,
             dragForward, dragBack;
 
-    public static Scale_Custom sc;
+    //Breaks / Slow down booleans
+    bool AirbrakeDeployed, FlapsDeployed;
+    float airbrakeDrag, flapsDrag;
+
+    public Scale_Custom sc;
 
 
     /* update loop. 
@@ -33,7 +37,12 @@ public class Plane_Control_Sys : MonoBehaviour
         {
             Debug.Log("Space key was pressed.");
             UpdateThrust();
+        }
 
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            Debug.Log("shift key was pressed.");
+            UpdateDrag();
         }
     }
 
@@ -79,7 +88,7 @@ public class Plane_Control_Sys : MonoBehaviour
     /* Thrust is the simplest force to implement, we set a thruttle 
      * value from zero to one and we multiply that by the max thrust*/
     void UpdateThrust() {
-        GetComponent<Rigidbody>().AddRelativeForce(Throttle * maxThrust * Vector3.right /*Vector3.forward*/);
+        GetComponent<Rigidbody>().AddRelativeForce(Throttle * maxThrust * Vector3.forward /*Vector3.right*/);
     }
 
     /* refereces:
@@ -94,17 +103,27 @@ public class Plane_Control_Sys : MonoBehaviour
      * will be ignored and we just control the planes drag by the coefficient of drag (Cd)
      * 
      * The coefficient of drag depends on which way the plane is facing relative to the air 
-     * flow */
-    void UdateDrag() {
+     * flow 
+     *
+     * The 6 drag coefficients are defined using Unity's animation curve class:
+     * input of curve  = (speed)
+     * output of curve = (coefficient of drag) 
+     * NOTE: this allows for fine-tuning the drag behaviour at different speeds
+     * */
+    void UpdateDrag() {
         var lv = LocalVelocity;
         var lv2 = lv.sqrMagnitude; //velocity squared
+
+        float airbrakeDrag = AirbrakeDeployed ? this.airbrakeDrag : 0;
+        float flapsDrag = FlapsDeployed ? this.flapsDrag : 0;
 
         //calculate coefficient of drag depending on direction on velocity
         var coefficient = sc.ScaleCustom(
             lv.normalized,
             dragRight.Evaluate(Mathf.Abs(lv.x)),    dragLeft.Evaluate(Mathf.Abs(lv.x)),
             dragTop.Evaluate(Mathf.Abs(lv.y)),      dragBottom.Evaluate(Mathf.Abs(lv.y)),
-            dragForward.Evaluate(Mathf.Abs(lv.z)),  dragBack.Evaluate(Mathf.Abs(lv.z))
+            dragForward.Evaluate(Mathf.Abs(lv.z)) + airbrakeDrag + flapsDrag, //include extra drag fgor forward coefficient  
+            dragBack.Evaluate(Mathf.Abs(lv.z))
          );
 
         var drag = coefficient.magnitude * lv2 * -lv.normalized; //drag is oppsite direction of velocity
