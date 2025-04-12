@@ -20,6 +20,9 @@ public class Plane_Control_Sys : MonoBehaviour
     bool AirbrakeDeployed, FlapsDeployed;
     float airbrakeDrag, flapsDrag;
 
+    //induced drag
+    int inducedDrag;
+
     public Scale_Custom sc;
 
 
@@ -129,4 +132,71 @@ public class Plane_Control_Sys : MonoBehaviour
         var drag = coefficient.magnitude * lv2 * -lv.normalized; //drag is oppsite direction of velocity
         GetComponent<Rigidbody>().AddRelativeForce(drag);
     }
+
+    /*Lift (force) equation:
+     * 1) https://en.wikipedia.org/wiki/Lift_(force)
+     * 2) https://www.flight-training-made-simple.com/post/the-lift-formula
+     * 
+     * Just like the drag function the Air density (rho) and the surface area (A) is ignored
+     * NOTE: the coefficient is not a constant, it depends on the planes angle of attack.
+     * 
+     * after coefficient (Cl) we add another variable called liftPower
+     * liftPower does not effect any paramters on real plane, just there to make hand trunning easier.
+    */
+
+
+    /*Angle of Attack:
+     * 1) https://en.wikipedia.org/wiki/Angle_of_attack
+     * 2) https://www.flight-training-made-simple.com/post/the-lift-formula
+     * 3) unity example: 
+     * https://stackoverflow.com/questions/49716989/unity-aircraft-physics
+     * https://www.youtube.com/watch?v=7vAHo2B1zLc&ab_channel=Vazgriz
+     * 
+     * if velocity squared times the coeffiecient of lift times lift power is greater than
+     * the mass of the plane, the plane will begin flying.
+     */
+
+
+    /*Induced drag
+     * 1) https://en.wikipedia.org/wiki/Lift-induced_drag 
+     * 2) https://www.grc.nasa.gov/www/k-12/VirtualAero/BottleRocket/airplane/induced.html#:~:text=The%20induced%20drag%20coefficient%20Cdi,times%20an%20efficiency%20factor%20e.&text=The%20aspect%20ratio%20is%20the,by%20the%20wing%20area%20A.
+     * 
+     * AR and e are constants relating to the shape of the wing
+     * AR: Aspect ratio
+     * e: Efficienty
+     * 
+     * instead of deviding by theses values we multiplied the coefficient of lift by a 
+     * hand time parameter 
+     */
+
+    Vector3 CalculateLift(float angleOfAttack, Vector3 rightAxis, float liftPower, AnimationCurve aoaCurve) {
+
+        //caluculate lift
+        /*using Vector3.ProjeceOnPlane Find part of velocity that flows directly over the wings
+         */
+        
+        /*the idea is air flowing sideways across the wing reduces the amount of lift.
+         * we could approximate that by projecting the airflow Vector into this plane*/
+        var liftVelocity = Vector3.ProjectOnPlane(LocalVelocity, rightAxis);
+        var v2 = liftVelocity.sqrMagnitude; //calculate the V squared term
+
+        /*lift = velocity^2 * coefficient * liftPower
+         coefficient varies with AOA */
+        //coefficient of lift is calculated using the AOA curve
+        var liftCoefficient = aoaCurve.Evaluate(angleOfAttack * Mathf.Rad2Deg);
+        var liftForce = v2 * liftCoefficient * liftPower; //product of these values is the liftForce
+
+        //lift is perpendicular to velocity
+        var liftDirection = Vector3.Cross(liftVelocity.normalized, rightAxis);
+        var lift = liftDirection * liftForce;
+
+        //calculate induced drag
+        //induced drag varies with square of lift coefficient
+        var dragForce = liftCoefficient * liftCoefficient * this.inducedDrag;
+        var dragDirection = -liftVelocity.normalized;
+        var inducedDrag = dragDirection * v2 * dragForce;
+
+        return lift + inducedDrag;
+    }
+
 }
