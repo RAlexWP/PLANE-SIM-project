@@ -437,6 +437,73 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  AirbrakeDeployed: 0
+  FlapsDeployed: 0
+  airbrakeDrag: 150
+  flapsDrag: 150
+  inducedDrag: 150
+  flapsLiftPower: 150
+  flapsAOABias: 150
+  liftPower: 150
+  liftAOACurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -6.7148285
+      outSlope: -6.7148285
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.29784825
+      value: -1
+      inSlope: 0.8768873
+      outSlope: 0.8768873
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.76819044
+      value: 2.9831414
+      inSlope: -0.043221474
+      outSlope: -0.043221474
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: -8.555046
+      outSlope: -8.555046
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  rudderPower: 0
+  rudderAOACurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.3918457
+      value: 0.7193413
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  sc: {fileID: 1667634509}
 --- !u!4 &417217622 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4882781291406988407, guid: d8b762e102429004ba6884d406594a11, type: 3}
@@ -704,12 +771,12 @@ GameObject:
   - component: {fileID: 1667634510}
   - component: {fileID: 1667634509}
   m_Layer: 0
-  m_Name: SCRIPT_MANAGER
+  m_Name: SCALE_CUSTOM_SCRIPT
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1667634509
 MonoBehaviour:
   m_ObjectHideFlags: 0
